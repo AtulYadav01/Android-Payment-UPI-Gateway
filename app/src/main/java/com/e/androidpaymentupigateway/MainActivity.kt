@@ -64,6 +64,26 @@ class MainActivity : AppCompatActivity() {
         val upipayintent = Intent(Intent.ACTION_VIEW)
         upipayintent.setData(uri)
 
+       /* if you want to open a particular app then
+
+        val upipayintent = Intent(Intent.ACTION_VIEW)
+        when {
+            upigpay == "1" -> {
+                upipayintent.setPackage("com.google.android.apps.nbu.paisa.user")
+                upipayintent.setData(uri)
+            }
+            upiphonepe == "1" -> {
+                upipayintent.setPackage("com.phonepe.app")
+                upipayintent.setData(uri)
+            }
+            else -> {
+                upipayintent.setData(uri)
+            }
+        }
+
+        Here upigpay and upiphonepe is the variable on which we get value and open app accordingly
+        */
+
         val chooser = Intent.createChooser(upipayintent, "Pay With")
 
         if (null != chooser.resolveActivity(packageManager)) {
