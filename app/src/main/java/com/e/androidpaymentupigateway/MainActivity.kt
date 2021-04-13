@@ -5,11 +5,11 @@ import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import java.util.*
 
@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    val r = Random()
+    private val r = Random()
     private val output =
             r.nextInt(2000000 - 200000 + 1).toString() + "20000"
 
@@ -62,7 +62,7 @@ class MainActivity : AppCompatActivity() {
                 .build()
 
         val upipayintent = Intent(Intent.ACTION_VIEW)
-        upipayintent.setData(uri)
+        upipayintent.data = uri
 
        /* if you want to open a particular app then
 
@@ -123,37 +123,39 @@ class MainActivity : AppCompatActivity() {
 
     private fun upiPaymentDataOperation(data: ArrayList<String>) {
         if (isConnectionAvailable(this@MainActivity)) {
-            var str: String? = data[0]
-            Log.d("UPIPAY", "upiPaymentDataOperation: " + str!!)
-            var paymentCancel = ""
-            if (str == null) str = "discard"
-            var status = ""
-            var approvalRefNo = ""
-            val response = str.split("&".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-            for (i in response.indices) {
-                val equalStr = response[i].split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                if (equalStr.size >= 2) {
-                    if (equalStr[0].toLowerCase(Locale.ROOT) == "Status".toLowerCase(Locale.ROOT)) {
-                        status = equalStr[1].toLowerCase(Locale.ROOT)
-                    } else if (equalStr[0].equals("ApprovalRefNo", ignoreCase = true) || equalStr[0].toLowerCase(
-                                    Locale.ROOT
-                            ) == "txnRef".toLowerCase(Locale.ROOT)
-                    ) {
-                        approvalRefNo = equalStr[1]
-                    }
-                } else {
-                    paymentCancel = "Payment cancelled by user."
-                }
-            }
-
-            if (status == "success") {
-                //Code to handle successful transaction here.
-                Toast.makeText(this@MainActivity, "Transaction successful.", Toast.LENGTH_SHORT).show()
-                Log.d("UPI", "responseStr: $approvalRefNo")
-            } else if ("Payment cancelled by user." == paymentCancel) {
-                Toast.makeText(this@MainActivity, "Payment cancelled by user.", Toast.LENGTH_SHORT).show()
+            if (data.isEmpty()) {
+                Toast.makeText(this, "Payment Cancelled by User", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(this@MainActivity, "Transaction failed.Please try again", Toast.LENGTH_SHORT).show()
+                val str: String = data[0]
+                Log.d("UPIPAY", "upiPaymentDataOperation: $str")
+                var paymentCancel = ""
+                var status = ""
+                var approvalRefNo = ""
+                val response = str.split("&".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                for (i in response.indices) {
+                    val equalStr = response[i].split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                    if (equalStr.size >= 2) {
+                        if (equalStr[0].equals("Status", ignoreCase = true)) {
+                            status = equalStr[1].toLowerCase(Locale.ROOT)
+                        } else if (equalStr[0].equals("ApprovalRefNo", ignoreCase = true) || equalStr[0].equals(
+                                "txnRef", ignoreCase = true)
+                        ) {
+                            approvalRefNo = equalStr[1]
+                        }
+                    } else {
+                        paymentCancel = "Payment cancelled by user."
+                    }
+                }
+
+                if (status == "success") {
+                    //Code to handle successful transaction here.
+                    Toast.makeText(this@MainActivity, "Transaction successful.", Toast.LENGTH_SHORT).show()
+                    Log.d("UPI", "responseStr: $approvalRefNo")
+                } else if ("Payment cancelled by user." == paymentCancel) {
+                    Toast.makeText(this@MainActivity, "Payment cancelled by user.", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@MainActivity, "Transaction failed.Please try again", Toast.LENGTH_SHORT).show()
+                }
             }
         } else {
             Toast.makeText(this@MainActivity, "Internet connection is not available. Please check and try again", Toast.LENGTH_SHORT).show()
@@ -164,13 +166,11 @@ class MainActivity : AppCompatActivity() {
 
         fun isConnectionAvailable(context: Context): Boolean {
             val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-            if (connectivityManager != null) {
-                val netInfo = connectivityManager.activeNetworkInfo
-                if (netInfo != null && netInfo.isConnected
-                        && netInfo.isConnectedOrConnecting
-                        && netInfo.isAvailable) {
-                    return true
-                }
+            val netInfo = connectivityManager.activeNetworkInfo
+            if (netInfo != null && netInfo.isConnected
+                    && netInfo.isConnectedOrConnecting
+                    && netInfo.isAvailable) {
+                return true
             }
             return false
         }
